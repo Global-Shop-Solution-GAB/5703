@@ -1,0 +1,58 @@
+Program.Sub.Preflight.Start
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+'Author: Bix
+'Date: 11 Oct 2019
+'GCG_5703_PL_Warning.g2u
+V.Local.sError.Declare
+F.Intrinsic.Control.Try
+
+F.Intrinsic.Control.SelectCase(V.Caller.Hook)
+	F.Intrinsic.Control.Case(12230)
+		'Order Lines Pre Save Hook
+		F.Intrinsic.Control.CallSub(CheckProductLine,"PL",V.Passed.000013.Trim,"Price",V.Passed.000009,"Cost",V.Passed.000012,"Qty",V.Passed.000007)
+F.Intrinsic.Control.EndSelect
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Caller.ScriptFile,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+F.Intrinsic.Control.EndTry
+Program.Sub.Main.End
+
+Program.Sub.CheckProductLine.Start
+'V.Args.PL, V.Args.Price, V.Args.Cost, V.Args.Qty
+V.Local.sError.Declare
+V.Local.sMessage.Declare
+V.Local.fPTot.Declare
+V.Local.fCTot.Declare
+V.Local.iRet.Declare
+F.Intrinsic.Control.Try
+
+V.Local.sMessage.Set("")
+
+F.Intrinsic.Control.If(V.Args.Cost,>,V.Args.Price)
+	F.Intrinsic.Math.Mult(V.Args.Price,V.Args.Qty,V.Local.fPTot)
+	F.Intrinsic.Math.Mult(V.Args.Cost,V.Args.Qty,V.Local.fCTot)
+	F.Intrinsic.Control.If(V.Args.PL,=,"AC","and",V.Args.Cost,>,250)
+		F.Intrinsic.String.Build("The total cost ({0} {1}) of this order line is over {0} 250 and exceeds the total price ({0} {2}).{3}Would you like to continue?",V.Company.CurrencySymbol,V.Local.fCTot.Currency,V.Local.fPTot.Currency,V.Ambient.NewLine,V.Local.sMessage)
+	F.Intrinsic.Control.ElseIf(V.Args.PL,!=,"AC")
+		F.Intrinsic.String.Build("The total cost ({0} {1}) of this order line exceeds the total price ({0} {2}).{3}Would you like to continue?",V.Company.CurrencySymbol,V.Local.fCTot.Currency,V.Local.fPTot.Currency,V.Ambient.NewLine,V.Local.sMessage)
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.If(V.Local.sMessage,!=,"")
+	F.Intrinsic.UI.Msgbox(V.Local.sMessage,"Cost is greater than Price",4,V.Local.iRet)
+	F.Intrinsic.Control.If(V.Local.iRet,=,7)
+		'No, pass the override
+		V.Passed.777777.Set(1)
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Caller.ScriptFile,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+F.Intrinsic.Control.EndTry
+Program.Sub.CheckProductLine.End
